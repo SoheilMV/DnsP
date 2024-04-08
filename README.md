@@ -3,3 +3,76 @@
 # DnsP
 DNS Provider
 
+# Installation
+1. Download the program and unzip it . 
+2. Add the program path to the system environment.
+3. Open **CMD**.
+4. Enter **dnsp** to make sure it works.
+
+# Commands
+| Short Name | Long Name | Description                      |
+|------------|-----------|----------------------------------|
+| -a         | --add     | Add DNS to the list.             |
+| -r         | --remove  | Remove DNS from the list.        |
+| -b         | --block   | Add hosts to blacklist.          |
+| -l         | --unblock | Remove hosts from the blacklist. |
+| -s         | --skip    | Skip dns.                        |
+| -k         | --unskip  | Undo skip dns.                   |
+|            | --log     | Display the list of DNS.         |
+|            | --run     | Run local DNS.                   |
+|            | --clear   | Clear all dns from the list.     |
+|            | --help    | Display this help screen.        |
+|            | --version | Display version information.     |
+
+# Using
+> dnsp **[command]** **[value]**
+
+### How to add dns?
+> dnsp **[-a | --add] [DNS]**  
+> dnsp **[-a | --add] [DNS] [-n | --name] [Name]**
+>
+> **Example:**  
+> dnsp -a 1.1.1.1 -n cloudflare
+
+### How to remove dns?
+> dnsp **[-r | --remove] [DNS or ID]**  
+>
+> **Example:**  
+> dnsp -r 1.1.1.1
+
+### How to block the host?
+> dnsp **[-b | --block] [Host]**  
+>
+> **Example:**  
+> dnsp -b google.com
+
+### How to unblock the host?
+> dnsp **[-l | --unblock] [Host]**  
+>
+> **Example:**  
+> dnsp -l google.com
+
+### How to deactivate dns?
+> dnsp **[-s | --skip] [DNS or ID]**  
+>
+> **Example:**  
+> dnsp -s 1.1.1.1
+
+### How to activate dns?
+> dnsp **[-k | --unskip] [DNS or ID]**  
+>
+> **Example:**  
+> dnsp -k 1.1.1.1
+
+### How do I get a report?
+> dnsp --log  
+
+### How to start local dns?
+> dnsp --run  
+
+# Credits
+- [Ae.Dns](https://github.com/alanedwardes/Ae.Dns) (Pure C# implementation of UDP, TCP and HTTPS ("DoH") DNS clients + servers with configurable caching/filtering layers)
+- [CommandLineParser](https://github.com/commandlineparser/commandline) (The best C# command line parser that brings standardized *nix getopt style, for .NET. Includes F# support)
+- [ConsoleTables](https://github.com/khalidabuhakmeh/ConsoleTables) (Print out a nicely formatted table in a console application C#)
+- [Figgle](https://github.com/drewnoakes/figgle) (ASCII banner generation for .NET)
+- [Newtonsoft.Json](https://github.com/JamesNK/Newtonsoft.Json) (Json.NET is a popular high-performance JSON framework for .NET)

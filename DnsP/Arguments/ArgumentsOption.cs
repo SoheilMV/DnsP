@@ -2,7 +2,7 @@
 
 internal class ArgumentsOption
 {
-    [Option('a', "add", HelpText = "Add DNS to the list.", SetName = "add")]
+    [Option('a', "add", HelpText = "Add DNS to the list.")]
     public string? Add { get; set; }
 
     [Option('n', "name", HelpText = "Choose a name for DNS.", Hidden = true)]
