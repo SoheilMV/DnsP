@@ -5,6 +5,15 @@
     <TargetFrameworks>net6.0</TargetFrameworks>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+	<ApplicationIcon>../icon.ico</ApplicationIcon>
+    <Version>1.1.0</Version>
+    <Description>DNS Provider</Description>
+    <Copyright>Copyright (C) 2024 DnsP</Copyright>
+    <PackageProjectUrl>https://github.com/SoheilMV/DnsP</PackageProjectUrl>
+    <PackageReadmeFile></PackageReadmeFile>
+    <RepositoryUrl>https://github.com/SoheilMV/DnsP</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>dns</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>

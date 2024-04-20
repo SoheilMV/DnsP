@@ -8,14 +8,14 @@ using Ae.Dns.Client.Filters;
 
 bool _run = false;
 string _name = "DnsP";
-
-Console.Title = _name;
+CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
 if (args.Length == 0)
     args = new string[] { "--help" };
 
 try
 {
+    Console.Title = _name;
     Database db = Database.Initialize();
     var arguments = ArgumentsParser.Parse(args);
     var result = Parser.Default.ParseArguments<ArgumentsOption>(arguments);
@@ -98,9 +98,8 @@ try
             "https://github.com/SoheilMV".ToCenter();
             Console.ResetColor();
 
-
-            Logger.Warn($"DNS was implemented on the {IPAddress.Any.ToString()}");
-            Console.WriteLine();
+            ClosingHandler.Create(onClosing, onClosed);
+            Logger.Warn("Press CTRL + C to exit the program.");
         }
         else
         {
@@ -139,7 +138,24 @@ try
         };
         using IDnsRawClient rawClient = new DnsRawClient(filterClient);
         using IDnsServer server = new DnsUdpServer(rawClient, serverOptions);
-        await server.Listen();
+
+        Logger.Warn($"DNS was implemented on the '{IPAddress.Any}'.");
+        if (Utility.IsRunAsAdmin())
+        {
+            Logger.Warn("Please wait...");
+            var network = Utility.GetNetworkInterface();
+            Utility.RunCommand("netsh", $"interface ipv4 add dns name=\"{network.Name}\" address=127.0.0.1 index=1");
+            //Utility.RunCommand("netsh", $"interface ipv4 add dns name=\"{network.Name}\" address=127.0.0.1 index=2");
+            Logger.Warn("DNS settings changed successfully.");
+            Console.WriteLine();
+        }
+        else
+        {
+            Logger.Error("DNS registration requires elevation (Run as administrator).");
+            Console.WriteLine();
+        }
+
+        await server.Listen(_cancellationTokenSource.Token);
     }
 
 }
@@ -147,3 +163,21 @@ catch (Exception ex)
 {
     Logger.Error(ex.Message);
 }
+
+void onClosing()
+{
+    _cancellationTokenSource.Cancel();
+}
+
+void onClosed()
+{
+    if (Utility.IsRunAsAdmin())
+    {
+        Console.WriteLine();
+        var network = Utility.GetNetworkInterface();
+        Utility.RunCommand("netsh", $"interface ipv4 set dns name=\"{network.Name}\" source=dhcp");
+
+        Logger.Warn("DNS has been successfully disabled.");
+    }
+}
+
