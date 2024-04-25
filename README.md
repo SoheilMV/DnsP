@@ -18,6 +18,7 @@ DNS Provider
 | -l         | --unblock | Remove hosts from the blacklist. |
 | -s         | --skip    | Skip dns.                        |
 | -k         | --unskip  | Undo skip dns.                   |
+| -v         | --visit   | Visit the project repository.    |
 |            | --log     | Display the list of DNS.         |
 |            | --run     | Run local DNS.                   |
 |            | --clear   | Clear all dns from the list.     |
