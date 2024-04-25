@@ -6,7 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 	<ApplicationIcon>../icon.ico</ApplicationIcon>
-    <Version>1.1.0</Version>
+    <Version>1.1.1</Version>
     <Description>DNS Provider</Description>
     <Copyright>Copyright (C) 2024 DnsP</Copyright>
     <PackageProjectUrl>https://github.com/SoheilMV/DnsP</PackageProjectUrl>
@@ -24,6 +24,7 @@
     <PackageReference Include="ConsoleTables" Version="2.6.1" />
     <PackageReference Include="Figgle" Version="0.5.1" />
     <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
+    <PackageReference Include="QRCoder" Version="1.4.3" />
   </ItemGroup>
 
 </Project>

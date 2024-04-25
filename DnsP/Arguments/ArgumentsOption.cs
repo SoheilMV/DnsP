@@ -23,6 +23,9 @@ internal class ArgumentsOption
     [Option('k', "unskip", HelpText = "Undo skip dns.")]
     public string? Unskip { get; set; }
 
+    [Option('v', "visit", HelpText = "Visit the project repository.")]
+    public bool Visit { get; set; }
+
     [Option("log", HelpText = "Display the list of DNS.")]
     public bool Log { get; set; }
 

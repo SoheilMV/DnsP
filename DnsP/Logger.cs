@@ -29,4 +29,11 @@ internal static class Logger
         Console.WriteLine(message);
         Console.ResetColor();
     }
+
+    public static void Custom(string message, ConsoleColor color)
+    {
+        Console.ForegroundColor = color;
+        Console.WriteLine(message);
+        Console.ResetColor();
+    }
 }

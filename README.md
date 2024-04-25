@@ -3,13 +3,13 @@
 # DnsP
 DNS Provider
 
-# Installation
+# :inbox_tray:Installation
 1. Download the program and unzip it . 
 2. Add the program path to the system environment.
 3. Open **CMD**.
 4. Enter **dnsp** to make sure it works.
 
-# Commands
+# :books:Commands
 | Short Name | Long Name | Description                      |
 |------------|-----------|----------------------------------|
 | -a         | --add     | Add DNS to the list.             |
@@ -24,7 +24,7 @@ DNS Provider
 |            | --help    | Display this help screen.        |
 |            | --version | Display version information.     |
 
-# Using
+# :computer:Using
 > dnsp **[command]** **[value]**
 
 ### How to add dns?
@@ -70,9 +70,10 @@ DNS Provider
 ### How to start local dns?
 > dnsp --run  
 
-# Credits
+# :bookmark:Credits
 - [Ae.Dns](https://github.com/alanedwardes/Ae.Dns) (Pure C# implementation of UDP, TCP and HTTPS ("DoH") DNS clients + servers with configurable caching/filtering layers)
 - [CommandLineParser](https://github.com/commandlineparser/commandline) (The best C# command line parser that brings standardized *nix getopt style, for .NET. Includes F# support)
 - [ConsoleTables](https://github.com/khalidabuhakmeh/ConsoleTables) (Print out a nicely formatted table in a console application C#)
 - [Figgle](https://github.com/drewnoakes/figgle) (ASCII banner generation for .NET)
 - [Newtonsoft.Json](https://github.com/JamesNK/Newtonsoft.Json) (Json.NET is a popular high-performance JSON framework for .NET)
+- [QRCoder](https://github.com/codebude/QRCoder) (A pure C# Open Source QR Code implementation)

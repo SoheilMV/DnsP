@@ -5,9 +5,11 @@ using Ae.Dns.Server;
 using Ae.Dns.Client;
 using Ae.Dns.Protocol;
 using Ae.Dns.Client.Filters;
+using QRCoder;
 
 bool _run = false;
 string _name = "DnsP";
+string _url = "https://github.com/SoheilMV";
 CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
 if (args.Length == 0)
@@ -89,14 +91,25 @@ try
                 Logger.Debug(table.ToMarkDownString());
             }
         }
+        else if (options.Visit)
+        {
+            string url = $"{_url}/DnsP";
+            using (QRCodeGenerator qrGenerator = new QRCodeGenerator())
+            {
+                QRCodeData qrCodeData = qrGenerator.CreateQrCode(new PayloadGenerator.Url(url));
+                using (AsciiQRCode qrCode = new AsciiQRCode(qrCodeData))
+                {
+                    Utility.OpenUrl(url);
+                    Logger.Custom(qrCode.GetGraphic(1, drawQuietZones: false), ConsoleColor.DarkYellow);
+                }
+            }
+        }
         else if (options.Run)
         {
             _run = true;
 
-            Console.ForegroundColor = ConsoleColor.Magenta;
-            _name.ToLogo();
-            "https://github.com/SoheilMV".ToCenter();
-            Console.ResetColor();
+            Logger.Custom(_name.ToLogo(), ConsoleColor.Magenta);
+            Logger.Custom(_url.ToCenter(), ConsoleColor.Magenta);
 
             ClosingHandler.Create(onClosing, onClosed);
             Logger.Warn("Press CTRL + C to exit the program.");
@@ -142,7 +155,6 @@ try
         Logger.Warn($"DNS was implemented on the '{IPAddress.Any}'.");
         if (Utility.IsRunAsAdmin())
         {
-            Logger.Warn("Please wait...");
             var network = Utility.GetNetworkInterface();
             Utility.RunCommand("netsh", $"interface ipv4 add dns name=\"{network.Name}\" address=127.0.0.1 index=1");
             //Utility.RunCommand("netsh", $"interface ipv4 add dns name=\"{network.Name}\" address=127.0.0.1 index=2");
@@ -176,7 +188,6 @@ void onClosed()
         Console.WriteLine();
         var network = Utility.GetNetworkInterface();
         Utility.RunCommand("netsh", $"interface ipv4 set dns name=\"{network.Name}\" source=dhcp");
-
         Logger.Warn("DNS has been successfully disabled.");
     }
 }

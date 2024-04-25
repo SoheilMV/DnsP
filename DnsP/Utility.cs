@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Net.NetworkInformation;
+using System.Runtime.InteropServices;
 using System.Security.Principal;
 using System.Text;
 using System.Threading.Tasks;
@@ -22,24 +23,39 @@ internal static class Utility
         throw new InvalidOperationException("Unable to find active local connection.");
     }
 
-    public static string RunCommand(string command, string arguments)
+    public static void RunCommand(string command)
+    {
+        RunCommand(command, string.Empty);
+    }
+
+    public static void RunCommand(string command, string arguments)
+    {
+        RunCommand(command, arguments, false, false);
+    }
+
+    public static string RunCommand(string command, string arguments, bool redirectOutput, bool useShellExecute)
     {
         ProcessStartInfo processInfo = new ProcessStartInfo
         {
             FileName = command,
             Arguments = arguments,
-            RedirectStandardOutput = true,
+            RedirectStandardOutput = redirectOutput,
             RedirectStandardError = false,
-            UseShellExecute = false,
-            CreateNoWindow = true
+            UseShellExecute = useShellExecute,
+            CreateNoWindow = true,
         };
 
         using (Process process = new Process())
         {
             process.StartInfo = processInfo;
             process.Start();
-            process.WaitForExit();
-            return process.StandardOutput.ReadToEnd();
+            if (redirectOutput)
+            {
+                process.WaitForExit();
+                return process.StandardOutput.ReadToEnd();
+            }
+            else
+                return string.Empty;
         }
     }
 
@@ -61,5 +77,40 @@ internal static class Utility
             isAdmin = false;
         }
         return isAdmin;
+    }
+
+    public static bool OpenUrl(string url)
+    {
+        try
+        {
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows) || RuntimeInformation.OSDescription.Contains("microsoft-standard"))
+            {
+                try
+                {
+                    RunCommand(url);
+                }
+                catch
+                {
+                    RunCommand("cmd.exe", $"/c start {url.Replace("&", "^&")}");
+                }
+
+                return true;
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                RunCommand("xdg-open", url);
+                return true;
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                RunCommand("open", url);
+                return true;
+            }
+        }
+        catch
+        {
+        }
+
+        return false;
     }
 }
