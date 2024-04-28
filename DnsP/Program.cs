@@ -1,15 +1,19 @@
 ﻿using System.Net;
+using System.Diagnostics;
+using QRCoder;
 using CommandLine;
 using ConsoleTables;
 using Ae.Dns.Server;
 using Ae.Dns.Client;
 using Ae.Dns.Protocol;
 using Ae.Dns.Client.Filters;
-using QRCoder;
 
 bool _run = false;
+bool _check = false;
 string _name = "DnsP";
 string _url = "https://github.com/SoheilMV";
+string _site = string.Empty;
+int _timeout = 5000;
 CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
 if (args.Length == 0)
@@ -75,21 +79,27 @@ try
             else
                 Logger.Error("DNS is not available in the list, choose DNS from the list.");
         }
-        else if (options.Clear)
+        else if (!string.IsNullOrEmpty(options.Check))
         {
-            db.Clear();
-            Logger.Warn("DNS list was completely cleared.");
+            _check = true;
+            _site = options.Check.Trim();
+            _timeout = options.Timeout;
         }
-        else if (options.Log)
+        else if (options.Protocol)
         {
-            if (db.list != null)
-            {
-                var table = new ConsoleTable("ID", "DNS", "Skip", "Name");
-                foreach (var item in db.list)
-                    table.AddRow(item.id, item.dns, item.skip, item.name);
-
-                Logger.Debug(table.ToMarkDownString());
-            }
+            var protocol = db.ChangeProtocol();
+            if (protocol == ClientsProtocol.UDP)
+                Logger.Info("DNS protocol changed to UDP.");
+            else
+                Logger.Info("DNS protocol changed to TCP.");
+        }
+        else if (options.Mode)
+        {
+            var mode = db.ChangeMode();
+            if (mode == ClientsMode.Racer)
+                Logger.Info("DNS mode changed to Racer.");
+            else
+                Logger.Info("DNS mode changed to Random.");
         }
         else if (options.Visit)
         {
@@ -104,6 +114,17 @@ try
                 }
             }
         }
+        else if (options.Log)
+        {
+            Console.WriteLine();
+            Logger.Info($"DNS Mode: {db.GetMode()}");
+            Logger.Info($"DNS Protocol: {db.GetProtocol()}");
+            Console.WriteLine();
+            var table = new ConsoleTable("ID", "DNS", "Skip", "Name");
+            foreach (var item in db.list)
+                table.AddRow(item.id, item.dns, item.skip, item.name);
+            Logger.Info(table.ToMarkDownString());
+        }
         else if (options.Run)
         {
             _run = true;
@@ -112,7 +133,12 @@ try
             Logger.Custom(_url.ToCenter(), ConsoleColor.Magenta);
 
             ClosingHandler.Create(onClosing, onClosed);
-            Logger.Warn("Press CTRL + C to exit the program.");
+            Logger.Warn("Press 'CTRL+C' to exit.");
+        }
+        else if (options.Clear)
+        {
+            db.Clear();
+            Logger.Warn("DNS list was completely cleared.");
         }
         else
         {
@@ -122,14 +148,24 @@ try
 
     if (_run)
     {
-
-        List<IDnsClient> dnsClients = new List<IDnsClient>();
-        foreach (DNS dns in db.list)
+        Logger.Warn($"DNS was implemented on the '{IPAddress.Any}'.");
+        if (Utility.IsRunAsAdmin())
         {
-            if (!dns.skip)
-                dnsClients.Add(new DnsUdpClient(IPAddress.Parse(dns.dns)));
+            var network = Utility.GetNetworkInterface();
+            Utility.RunCommand("netsh", $"interface ipv4 add dns name=\"{network.Name}\" address=127.0.0.1 index=1");
+            Logger.Warn("DNS settings changed successfully.");
+            Console.WriteLine();
         }
-        using IDnsClient RacerClient = new DnsRacerClient(dnsClients.ToArray());
+        else
+        {
+            Logger.Error("DNS registration requires elevation (Run as administrator).");
+            Console.WriteLine();
+        }
+
+        ClientsMode mode = db.GetMode();
+        ClientsProtocol protocol = db.GetProtocol();
+        var clients = GetDnsClients(db, protocol);
+        using IDnsClient clientMode = GetClientMode(mode, clients);
         IDnsFilter dnsFilter = new DnsDelegateFilter((message) =>
         {
             bool result = true;
@@ -144,36 +180,113 @@ try
 
             return result;
         });
-        using IDnsClient filterClient = new DnsFilterClient(dnsFilter, RacerClient);
-        var serverOptions = new DnsUdpServerOptions
-        {
-            Endpoint = new IPEndPoint(IPAddress.Any, 53)
-        };
+        using IDnsClient filterClient = new DnsFilterClient(dnsFilter, clientMode);
         using IDnsRawClient rawClient = new DnsRawClient(filterClient);
-        using IDnsServer server = new DnsUdpServer(rawClient, serverOptions);
-
-        Logger.Warn($"DNS was implemented on the '{IPAddress.Any}'.");
-        if (Utility.IsRunAsAdmin())
-        {
-            var network = Utility.GetNetworkInterface();
-            Utility.RunCommand("netsh", $"interface ipv4 add dns name=\"{network.Name}\" address=127.0.0.1 index=1");
-            //Utility.RunCommand("netsh", $"interface ipv4 add dns name=\"{network.Name}\" address=127.0.0.1 index=2");
-            Logger.Warn("DNS settings changed successfully.");
-            Console.WriteLine();
-        }
-        else
-        {
-            Logger.Error("DNS registration requires elevation (Run as administrator).");
-            Console.WriteLine();
-        }
-
+        using IDnsServer server = GetServer(rawClient, protocol);
         await server.Listen(_cancellationTokenSource.Token);
     }
-
+    else if (_check)
+    {
+        Console.WriteLine();
+        int index = 0;
+        var dnsClients = GetDnsClients(db, db.GetProtocol(), false);
+        foreach (var client in dnsClients)
+        {
+            index++;
+            var uri = new UriBuilder(client.ToString()!);
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+            try
+            {
+                using HttpClient httpClient = new HttpClient(new DnsDelegatingHandler(client)
+                {
+                    InnerHandler = new SocketsHttpHandler()
+                    {
+                        ConnectTimeout = TimeSpan.FromMilliseconds(_timeout),
+                    }
+                });
+                httpClient.Timeout = TimeSpan.FromMilliseconds(_timeout);
+                HttpResponseMessage response = await httpClient.GetAsync(_site);
+                stopwatch.Stop();
+                if (response.StatusCode != HttpStatusCode.Forbidden)
+                {
+                    db.Unskip(uri.Host);
+                    Logger.Debug($"({index}/{dnsClients.Count}) {uri.Host} successfully connected. {stopwatch.ElapsedMilliseconds}ms");
+                }
+                else
+                {
+                    db.Skip(uri.Host);
+                    Logger.Error($"({index}/{dnsClients.Count}) {uri.Host} is banned.");
+                }
+            }
+            catch
+            {
+                stopwatch.Stop();
+                db.Skip(uri.Host);
+                Logger.Error($"({index}/{dnsClients.Count}) {uri.Host} is banned.");
+            }
+        }
+        Console.WriteLine();
+        Logger.Warn($"DnsP is ready to use in '{_site}'");
+    }
 }
 catch (Exception ex)
 {
     Logger.Error(ex.Message);
+}
+
+List<IDnsClient> GetDnsClients(Database db, ClientsProtocol protocol = ClientsProtocol.UDP, bool useSkip = true)
+{
+    List<IDnsClient> dnsClients = new List<IDnsClient>();
+    foreach (DNS dns in db.list)
+    {
+        if (useSkip)
+        {
+            if (!dns.skip)
+            {
+                if (protocol == ClientsProtocol.TCP)
+                    dnsClients.Add(new DnsTcpClient(IPAddress.Parse(dns.dns)));
+                else
+                    dnsClients.Add(new DnsUdpClient(IPAddress.Parse(dns.dns)));
+            }
+        }
+        else
+        {
+            if (protocol == ClientsProtocol.TCP)
+                dnsClients.Add(new DnsTcpClient(IPAddress.Parse(dns.dns)));
+            else
+                dnsClients.Add(new DnsUdpClient(IPAddress.Parse(dns.dns)));
+        }
+    }
+    return dnsClients;
+}
+
+IDnsClient GetClientMode(ClientsMode mode, List<IDnsClient> clients)
+{
+    if(mode == ClientsMode.Racer)
+        return new DnsRacerClient(clients.ToArray());
+    else
+        return new DnsRandomClient(clients.ToArray());
+}
+
+IDnsServer GetServer(IDnsRawClient rawClient, ClientsProtocol protocol = ClientsProtocol.UDP)
+{
+    if (protocol == ClientsProtocol.UDP)
+    {
+        var serverOptions = new DnsUdpServerOptions
+        {
+            Endpoint = new IPEndPoint(IPAddress.Any, 53)
+        };
+        return new DnsUdpServer(rawClient, serverOptions);
+    }
+    else
+    {
+        var serverOptions = new DnsTcpServerOptions
+        {
+            Endpoint = new IPEndPoint(IPAddress.Any, 53)
+        };
+        return new DnsTcpServer(rawClient, serverOptions);
+    }
 }
 
 void onClosing()

@@ -10,20 +10,23 @@ DNS Provider
 4. Enter **dnsp** to make sure it works.
 
 # :books:Commands
-| Short Name | Long Name | Description                      |
-|------------|-----------|----------------------------------|
-| -a         | --add     | Add DNS to the list.             |
-| -r         | --remove  | Remove DNS from the list.        |
-| -b         | --block   | Add hosts to blacklist.          |
-| -l         | --unblock | Remove hosts from the blacklist. |
-| -s         | --skip    | Skip dns.                        |
-| -k         | --unskip  | Undo skip dns.                   |
-| -v         | --visit   | Visit the project repository.    |
-|            | --log     | Display the list of DNS.         |
-|            | --run     | Run local DNS.                   |
-|            | --clear   | Clear all dns from the list.     |
-|            | --help    | Display this help screen.        |
-|            | --version | Display version information.     |
+| Short Name | Long Name  | Description                        |
+|------------|------------|------------------------------------|
+| -a         | --add      | Add DNS to the list.               |
+| -r         | --remove   | Remove DNS from the list.          |
+| -b         | --block    | Add hosts to blacklist.            |
+| -l         | --unblock  | Remove hosts from the blacklist.   |
+| -s         | --skip     | Skip dns.                          |
+| -k         | --unskip   | Undo skip dns.                     |
+| -c         | --check    | Find healthy dns.                  |
+| -p         | --protocol | Change the dns protocol.           |
+| -m         | --mode     | Change the type of dns list usage. |
+| -v         | --visit    | Visit the project repository.      |
+|            | --log      | Display the list of DNS.           |
+|            | --run      | Run local DNS.                     |
+|            | --clear    | Clear all dns from the list.       |
+|            | --help     | Display this help screen.          |
+|            | --version  | Display version information.       |
 
 # :computer:Using
 > dnsp **[command]** **[value]**
@@ -33,6 +36,7 @@ DNS Provider
 > dnsp **[-a | --add] [DNS] [-n | --name] [Name]**
 >
 > **Example:**  
+> dnsp -a 1.1.1.1   
 > dnsp -a 1.1.1.1 -n cloudflare
 
 ### How to remove dns?
@@ -64,6 +68,23 @@ DNS Provider
 >
 > **Example:**  
 > dnsp -k 1.1.1.1
+
+### How to check dns list?
+> dnsp **[-c | --check] [Link]**  
+> dnsp **[-c | --check] [Link] [-t | --timeout] [Millisecond]**  
+>
+> **Example:**  
+> dnsp -c https://www.example.com/  
+> dnsp -c https://www.example.com/ -t 2000
+
+*Note: By default the timeout is set to 5000ms*
+
+
+### How to change the dns protocol?
+> dnsp **[-p | --protocol]**
+
+### How to change the type of dns list usage?
+> dnsp **[-m | --mode]**
 
 ### How do I get a report?
 > dnsp --log  
