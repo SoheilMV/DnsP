@@ -2,13 +2,13 @@
 
 internal class ArgumentsOption
 {
-    [Option('a', "add", HelpText = "Add DNS to the list.")]
+    [Option('a', "add", HelpText = "Add dns to the list.")]
     public string? Add { get; set; }
 
     [Option('n', "name", HelpText = "Choose a name for dns.", Hidden = true)]
     public string? Name { get; set; }
 
-    [Option('r', "remove", HelpText = "Remove DNS from the list.")]
+    [Option('r', "remove", HelpText = "Remove dns from the list.")]
     public string? Remove { get; set; }
 
     [Option('b', "block", HelpText = "Add hosts to blacklist")]
@@ -38,10 +38,10 @@ internal class ArgumentsOption
     [Option('v', "visit", HelpText = "Visit the project repository.")]
     public bool Visit { get; set; }
 
-    [Option("log", HelpText = "Display the list of DNS.")]
+    [Option("log", HelpText = "Display the list of dns.")]
     public bool Log { get; set; }
 
-    [Option("run", HelpText = "Run local DNS.")]
+    [Option("run", HelpText = "Run local dns.")]
     public bool Run { get; set; }
 
     [Option("clear", HelpText = "Clear all dns from the list.")]

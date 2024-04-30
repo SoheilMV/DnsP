@@ -138,7 +138,7 @@ try
         else if (options.Clear)
         {
             db.Clear();
-            Logger.Warn("DNS list was completely cleared.");
+            Logger.Info("DNS list was completely cleared.");
         }
         else
         {
