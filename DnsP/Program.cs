@@ -29,24 +29,47 @@ try
     {
         if (!string.IsNullOrEmpty(options.Add))
         {
-            IPAddress? ip = options.Add.GetAddress();
-            string name = "-";
-            if (!string.IsNullOrEmpty(options.Name))
-                name = options.Name;
-
-            if (ip != null)
+            if (File.Exists(options.Add))
             {
-                if (db.Add(ip.ToString(), name))
-                    Logger.Info($"DNS was added to the list.");
-                else
-                    Logger.Error("DNS already exists, enter another DNS.");
+                DnsModel model = new DnsModel(options.Add);
+                var dns = model.GetDns();
+                foreach (var csv in dns)
+                {
+                    IPAddress? ip = csv[0].GetAddress();
+                    string name = csv.Length > 1 ? csv[1] : "-";
+                    if (ip != null)
+                    {
+                        db.Add(ip.ToString(), name);
+                    }
+                }
+                Logger.Info($"DNS was added to the list.");
             }
             else
-                Logger.Error("The IP address entered is not valid.");
+            {
+                IPAddress? ip = options.Add.GetAddress();
+                string name = "-";
+                if (!string.IsNullOrEmpty(options.Name))
+                    name = options.Name;
+
+                if (ip != null)
+                {
+                    if (db.Add(ip.ToString(), name))
+                        Logger.Info($"DNS was added to the list.");
+                    else
+                        Logger.Error("DNS already exists, enter another DNS.");
+                }
+                else
+                    Logger.Error("The IP address entered is not valid.");
+            }
         }
         else if (!string.IsNullOrEmpty(options.Remove))
         {
-            if (db.Remove(options.Remove))
+            if (options.Remove == "all")
+            {
+                db.Clear();
+                Logger.Info("DNS list was completely cleared.");
+            }
+            else if (db.Remove(options.Remove))
                 Logger.Info($"DNS was removed from the list.");
             else
                 Logger.Error("DNS is not available in the list, choose DNS from the list.");
@@ -63,18 +86,28 @@ try
             if (db.Unblock(options.Unblock))
                 Logger.Info($"{options.Unblock} was removed from the blocklist.");
             else
-                Logger.Error($"{options.Unblock} is not already blocked, select the host from the blocklist");
+                Logger.Error($"{options.Unblock} is not already blocked, select the host from the blocklist.");
         }
         else if (!string.IsNullOrEmpty(options.Skip))
         {
-            if (db.Skip(options.Skip))
+            if (options.Skip == "all")
+            {
+                db.Skip();
+                Logger.Info("All dns were skipped.");
+            }
+            else if (db.Skip(options.Skip))
                 Logger.Info($"DNS is skipped.");
             else
                 Logger.Error("DNS is not available in the list, choose DNS from the list.");
         }
         else if (!string.IsNullOrEmpty(options.Unskip))
         {
-            if (db.Unskip(options.Unskip))
+            if (options.Unskip == "all")
+            {
+                db.Unskip();
+                Logger.Info("All dns are enabled.");
+            }
+            else if (db.Unskip(options.Unskip))
                 Logger.Info($"DNS is used.");
             else
                 Logger.Error("DNS is not available in the list, choose DNS from the list.");
@@ -134,11 +167,6 @@ try
 
             ClosingHandler.Create(onClosing, onClosed);
             Logger.Warn("Press 'CTRL+C' to exit.");
-        }
-        else if (options.Clear)
-        {
-            db.Clear();
-            Logger.Info("DNS list was completely cleared.");
         }
         else
         {

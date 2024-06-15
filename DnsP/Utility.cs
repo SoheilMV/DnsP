@@ -64,15 +64,18 @@ internal static class Utility
         bool isAdmin;
         try
         {
-            WindowsIdentity user = WindowsIdentity.GetCurrent();
-            WindowsPrincipal principal = new WindowsPrincipal(user);
-            isAdmin = principal.IsInRole(WindowsBuiltInRole.Administrator);
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                WindowsIdentity user = WindowsIdentity.GetCurrent();
+                WindowsPrincipal principal = new WindowsPrincipal(user);
+                isAdmin = principal.IsInRole(WindowsBuiltInRole.Administrator);
+            }
+            else
+            {
+                isAdmin = false;
+            } 
         }
-        catch (UnauthorizedAccessException ex)
-        {
-            isAdmin = false;
-        }
-        catch (Exception ex)
+        catch
         {
             isAdmin = false;
         }

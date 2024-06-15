@@ -11,10 +11,10 @@ internal class ArgumentsOption
     [Option('r', "remove", HelpText = "Remove dns from the list.")]
     public string? Remove { get; set; }
 
-    [Option('b', "block", HelpText = "Add hosts to blacklist")]
+    [Option('b', "block", HelpText = "Add host to blacklist")]
     public string? Block { get; set; }
 
-    [Option('l', "unblock", HelpText = "Remove hosts from the blacklist.")]
+    [Option('l', "unblock", HelpText = "Remove host from the blacklist.")]
     public string? Unblock { get; set; }
 
     [Option('s', "skip", HelpText = "Skip dns.")]
@@ -43,7 +43,4 @@ internal class ArgumentsOption
 
     [Option("run", HelpText = "Run local dns.")]
     public bool Run { get; set; }
-
-    [Option("clear", HelpText = "Clear all dns from the list.")]
-    public bool Clear { get; set; }
 }

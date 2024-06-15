@@ -1,4 +1,5 @@
 ![DnsP](Images/dnsp.png)
+![DnsP](Images/vscode.png)
 
 # DnsP
 DNS Provider
@@ -14,8 +15,8 @@ DNS Provider
 |------------|------------|------------------------------------|
 | -a         | --add      | Add DNS to the list.               |
 | -r         | --remove   | Remove DNS from the list.          |
-| -b         | --block    | Add hosts to blacklist.            |
-| -l         | --unblock  | Remove hosts from the blacklist.   |
+| -b         | --block    | Add host to blacklist.             |
+| -l         | --unblock  | Remove host from the blacklist.    |
 | -s         | --skip     | Skip dns.                          |
 | -k         | --unskip   | Undo skip dns.                     |
 | -c         | --check    | Find healthy dns.                  |
@@ -24,7 +25,6 @@ DNS Provider
 | -v         | --visit    | Visit the project repository.      |
 |            | --log      | Display the list of DNS.           |
 |            | --run      | Run local DNS.                     |
-|            | --clear    | Clear all dns from the list.       |
 |            | --help     | Display this help screen.          |
 |            | --version  | Display version information.       |
 
@@ -33,17 +33,21 @@ DNS Provider
 
 ### How to add dns?
 > dnsp **[-a | --add] [DNS]**  
-> dnsp **[-a | --add] [DNS] [-n | --name] [Name]**
+> dnsp **[-a | --add] [DNS] [-n | --name] [Name]**    
+> dnsp **[-a | --add] [File]**
 >
 > **Example:**  
 > dnsp -a 1.1.1.1   
-> dnsp -a 1.1.1.1 -n cloudflare
+> dnsp -a 1.1.1.1 -n cloudflare    
+> dnsp -a C:\example.csv    
 
 ### How to remove dns?
-> dnsp **[-r | --remove] [DNS or ID]**  
+> dnsp **[-r | --remove] [DNS or ID or all]**  
+>
 >
 > **Example:**  
-> dnsp -r 1.1.1.1
+> dnsp -r 1.1.1.1    
+> dnsp -r all    
 
 ### How to block the host?
 > dnsp **[-b | --block] [Host]**  
@@ -58,16 +62,18 @@ DNS Provider
 > dnsp -l google.com
 
 ### How to deactivate dns?
-> dnsp **[-s | --skip] [DNS or ID]**  
+> dnsp **[-s | --skip] [DNS or ID or all]**  
 >
 > **Example:**  
-> dnsp -s 1.1.1.1
+> dnsp -s 1.1.1.1    
+> dnsp -s all    
 
 ### How to activate dns?
-> dnsp **[-k | --unskip] [DNS or ID]**  
+> dnsp **[-k | --unskip] [DNS or ID or all]**  
 >
 > **Example:**  
-> dnsp -k 1.1.1.1
+> dnsp -k 1.1.1.1    
+> dnsp -k all    
 
 ### How to check dns list?
 > dnsp **[-c | --check] [Link]**  

@@ -109,6 +109,15 @@ internal class Database
         return result;
     }
 
+    public void Skip()
+    {
+        foreach (var dns in list)
+        {
+            dns.skip = true;
+        }
+        Write();
+    }
+
     public bool Unskip(string dnsOrId)
     {
         bool result = false;
@@ -120,6 +129,15 @@ internal class Database
         }
         Write();
         return result;
+    }
+
+    public void Unskip()
+    {
+        foreach (var dns in list)
+        {
+            dns.skip = false;
+        }
+        Write();
     }
 
     public ClientsProtocol GetProtocol()
