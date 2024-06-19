@@ -118,6 +118,11 @@ try
             _site = options.Check.Trim();
             _timeout = options.Timeout;
         }
+        else if (options.Flush)
+        {
+            Utility.RunCommand("ipconfig", $"/flushdns");
+            Logger.Info("Successfully flushed.");
+        }
         else if (options.Protocol)
         {
             var protocol = db.ChangeProtocol();

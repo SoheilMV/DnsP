@@ -11,22 +11,23 @@ DNS Provider
 4. Enter **dnsp** to make sure it works.
 
 # :books:Commands
-| Short Name | Long Name  | Description                        |
-|------------|------------|------------------------------------|
-| -a         | --add      | Add DNS to the list.               |
-| -r         | --remove   | Remove DNS from the list.          |
-| -b         | --block    | Add host to blacklist.             |
-| -l         | --unblock  | Remove host from the blacklist.    |
-| -s         | --skip     | Skip dns.                          |
-| -k         | --unskip   | Undo skip dns.                     |
-| -c         | --check    | Find healthy dns.                  |
-| -p         | --protocol | Change the dns protocol.           |
-| -m         | --mode     | Change the type of dns list usage. |
-| -v         | --visit    | Visit the project repository.      |
-|            | --log      | Display the list of DNS.           |
-|            | --run      | Run local DNS.                     |
-|            | --help     | Display this help screen.          |
-|            | --version  | Display version information.       |
+| Short Name | Long Name  | Description                           |
+|------------|------------|---------------------------------------|
+| -a         | --add      | Add DNS to the list.                  |
+| -r         | --remove   | Remove DNS from the list.             |
+| -b         | --block    | Add host to blacklist.                |
+| -l         | --unblock  | Remove host from the blacklist.       |
+| -s         | --skip     | Skip dns.                             |
+| -k         | --unskip   | Undo skip dns.                        |
+| -c         | --check    | Find healthy dns.                     |
+| -f         | --flush    | Flushing your previous dns addresses. |
+| -p         | --protocol | Change the dns protocol.              |
+| -m         | --mode     | Change the type of dns list usage.    |
+| -v         | --visit    | Visit the project repository.         |
+|            | --log      | Display the list of DNS.              |
+|            | --run      | Run local DNS.                        |
+|            | --help     | Display this help screen.             |
+|            | --version  | Display version information.          |
 
 # :computer:Using
 > dnsp **[command]** **[value]**
@@ -85,6 +86,8 @@ DNS Provider
 
 *Note: By default the timeout is set to 5000ms*
 
+### How to use dns flushing?
+> dnsp **[-f | --flush]**    
 
 ### How to change the dns protocol?
 > dnsp **[-p | --protocol]**

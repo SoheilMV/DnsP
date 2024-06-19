@@ -17,14 +17,17 @@ internal class ArgumentsOption
     [Option('l', "unblock", HelpText = "Remove host from the blacklist.")]
     public string? Unblock { get; set; }
 
-    [Option('s', "skip", HelpText = "Skip dns.")]
+    [Option('s', "skip", HelpText = "Skipping the dns address.")]
     public string? Skip { get; set; }
 
-    [Option('k', "unskip", HelpText = "Undo skip dns.")]
+    [Option('k', "unskip", HelpText = "Undo skipping the dns address.")]
     public string? Unskip { get; set; }
 
     [Option('c', "check", HelpText = "Find healthy dns.")]
     public string? Check { get; set; }
+
+    [Option('f', "flush", HelpText = "Flushing your previous dns addresses.")]
+    public bool Flush { get; set; }
 
     [Option('t', "timeout", HelpText = "Timeout when checking dns.", Default = 5000, Hidden = true)]
     public int Timeout { get; set; }
