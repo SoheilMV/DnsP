@@ -3,10 +3,16 @@ using Figgle;
 
 internal static class Extensions
 {
-    public static IPAddress? GetAddress(this string address)
+    public static IPAddress?[] GetAddress(this string address)
     {
-        IPAddress? result;
-        IPAddress.TryParse(address, out result);
+        string[] data = address.Split(',');
+        IPAddress?[] result = new IPAddress[2];
+        for (int i = 0; i < 2; i++) {
+            string ip = data[i].Trim();
+            IPAddress? iPAddress;
+            IPAddress.TryParse(ip, out iPAddress);
+            result[i] = iPAddress;
+        }
         return result;
     }
 

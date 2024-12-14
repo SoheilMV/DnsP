@@ -17,10 +17,10 @@ internal class Database
         blacklist = new List<string>();
     }
 
-    public bool Add(string dns, string name)
+    public bool Add(string dns1, string dns2, string name)
     {
         bool result = false;
-        if (!(list.Where(d => d.dns == dns).ToArray().Length > 0))
+        if (!(list.Where(d => d.dns1 == dns1 || d.dns2 == dns2).ToArray().Length > 0))
         {
             if (list.Count > 0)
             {
@@ -30,7 +30,8 @@ internal class Database
                     id = d.id + 1,
                     name = name,
                     skip = false,
-                    dns = dns
+                    dns1 = dns1,
+                    dns2 = dns2
                 });
             }
             else
@@ -40,7 +41,8 @@ internal class Database
                     id = 0,
                     name = name,
                     skip = false,
-                    dns = dns
+                    dns1 = dns1,
+                    dns2 = dns2
                 });
             }
             result = true;
@@ -52,7 +54,7 @@ internal class Database
     public bool Remove(string dnsOrId)
     {
         bool result = false;
-        DNS[]? dns = list.Where(d => d.dns == dnsOrId || d.id.ToString() == dnsOrId).ToArray();
+        DNS[]? dns = list.Where(d => d.dns1 == dnsOrId || d.dns2 == dnsOrId || d.id.ToString() == dnsOrId).ToArray();
         if (dns != null || dns?.Length > 0)
         {
             foreach (var item in dns)
@@ -99,7 +101,7 @@ internal class Database
     public bool Skip(string dnsOrId)
     {
         bool result = false;
-        var dns = list.Where(d => d.dns == dnsOrId || d.id.ToString() == dnsOrId);
+        var dns = list.Where(d => d.dns1 == dnsOrId || d.dns2 == dnsOrId || d.id.ToString() == dnsOrId);
         foreach (var item in dns)
         {
             item.skip = true;
@@ -121,7 +123,7 @@ internal class Database
     public bool Unskip(string dnsOrId)
     {
         bool result = false;
-        var dns = list.Where(d => d.dns == dnsOrId || d.id.ToString() == dnsOrId);
+        var dns = list.Where(d => d.dns1 == dnsOrId || d.dns2 == dnsOrId || d.id.ToString() == dnsOrId);
         foreach (var item in dns)
         {
             item.skip = false;

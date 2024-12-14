@@ -13,8 +13,8 @@ DNS Provider
 # :books:Commands
 | Short Name | Long Name  | Description                           |
 |------------|------------|---------------------------------------|
-| -a         | --add      | Add DNS to the list.                  |
-| -r         | --remove   | Remove DNS from the list.             |
+| -a         | --add      | Add dns to the list.                  |
+| -r         | --remove   | Remove dns from the list.             |
 | -b         | --block    | Add host to blacklist.                |
 | -l         | --unblock  | Remove host from the blacklist.       |
 | -s         | --skip     | Skip dns.                             |
@@ -24,8 +24,8 @@ DNS Provider
 | -p         | --protocol | Change the dns protocol.              |
 | -m         | --mode     | Change the type of dns list usage.    |
 | -v         | --visit    | Visit the project repository.         |
-|            | --log      | Display the list of DNS.              |
-|            | --run      | Run local DNS.                        |
+|            | --log      | Display the list of dns.              |
+|            | --run      | Run local dns.                        |
 |            | --help     | Display this help screen.             |
 |            | --version  | Display version information.          |
 
@@ -38,8 +38,8 @@ DNS Provider
 > dnsp **[-a | --add] [File]**
 >
 > **Example:**  
-> dnsp -a 1.1.1.1   
-> dnsp -a 1.1.1.1 -n cloudflare    
+> dnsp -a 1.1.1.1,1.0.0.1   
+> dnsp -a 1.1.1.1,1.0.0.1 -n cloudflare    
 > dnsp -a C:\example.csv    
 
 ### How to remove dns?
@@ -108,3 +108,4 @@ DNS Provider
 - [Figgle](https://github.com/drewnoakes/figgle) (ASCII banner generation for .NET)
 - [Newtonsoft.Json](https://github.com/JamesNK/Newtonsoft.Json) (Json.NET is a popular high-performance JSON framework for .NET)
 - [QRCoder](https://github.com/codebude/QRCoder) (A pure C# Open Source QR Code implementation)
+- [CsvHelper](https://github.com/JoshClose/CsvHelper) (Library to help reading and writing CSV files)

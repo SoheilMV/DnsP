@@ -7,6 +7,8 @@ using Ae.Dns.Server;
 using Ae.Dns.Client;
 using Ae.Dns.Protocol;
 using Ae.Dns.Client.Filters;
+using System.Collections.Generic;
+using System;
 
 bool _run = false;
 bool _check = false;
@@ -32,28 +34,32 @@ try
             if (File.Exists(options.Add))
             {
                 DnsModel model = new DnsModel(options.Add);
-                var dns = model.GetDns();
-                foreach (var csv in dns)
+                var dnsList = model.GetDnsList();
+                foreach (var dns in dnsList)
                 {
-                    IPAddress? ip = csv[0].GetAddress();
-                    string name = csv.Length > 1 ? csv[1] : "-";
-                    if (ip != null)
+                    var ip = dns.DNS.GetAddress();
+                    string name = dns.Name.Length > 1 ? dns.Name : "-";
+                    IPAddress? iPAddress1 = ip[0];
+                    IPAddress? iPAddress2 = ip[1];
+                    if (iPAddress1 != null && iPAddress2 != null)
                     {
-                        db.Add(ip.ToString(), name);
+                        db.Add(iPAddress1.ToString(), iPAddress2.ToString(), name);
                     }
                 }
                 Logger.Info($"DNS was added to the list.");
             }
             else
             {
-                IPAddress? ip = options.Add.GetAddress();
+                IPAddress?[] ip = options.Add.GetAddress();
                 string name = "-";
                 if (!string.IsNullOrEmpty(options.Name))
                     name = options.Name;
 
-                if (ip != null)
+                IPAddress? iPAddress1 = ip[0];
+                IPAddress? iPAddress2 = ip[1];
+                if (iPAddress1 != null && iPAddress2 != null)
                 {
-                    if (db.Add(ip.ToString(), name))
+                    if (db.Add(iPAddress1.ToString(), iPAddress2.ToString(), name))
                         Logger.Info($"DNS was added to the list.");
                     else
                         Logger.Error("DNS already exists, enter another DNS.");
@@ -158,9 +164,13 @@ try
             Logger.Info($"DNS Mode: {db.GetMode()}");
             Logger.Info($"DNS Protocol: {db.GetProtocol()}");
             Console.WriteLine();
-            var table = new ConsoleTable("ID", "DNS", "Skip", "Name");
+            var table = new ConsoleTable("ID", "DNS", "Used", "Name");
             foreach (var item in db.list)
-                table.AddRow(item.id, item.dns, item.skip, item.name);
+            {
+                string used = item.skip == false ? "Yes" : "No";
+                string dns = $"{item.dns1} - {item.dns2}";
+                table.AddRow(item.id, dns, used, item.name);
+            }
             Logger.Info(table.ToMarkDownString());
         }
         else if (options.Run)
@@ -191,8 +201,16 @@ try
         }
         else
         {
-            Logger.Error("DNS registration requires elevation (Run as administrator).");
-            Console.WriteLine();
+            var hasParent = Utility.RestartParentProcessAsAdmin();
+            if (hasParent)
+            {
+                Environment.Exit(0);
+            }
+            else
+            {
+                Logger.Error("DNS registration requires elevation (Run as administrator).");
+                Console.WriteLine();
+            }
         }
 
         ClientsMode mode = db.GetMode();
@@ -226,37 +244,49 @@ try
         foreach (var client in dnsClients)
         {
             index++;
-            var uri = new UriBuilder(client.ToString()!);
-            var stopwatch = new Stopwatch();
-            stopwatch.Start();
-            try
+            int count = 0;
+            string ip = string.Empty;
+            foreach (var dns in client)
             {
-                using HttpClient httpClient = new HttpClient(new DnsDelegatingHandler(client)
+                var uri = new UriBuilder(dns.ToString()!);
+                ip = uri.Host;
+                var stopwatch = new Stopwatch();
+                stopwatch.Start();
+                try
                 {
-                    InnerHandler = new SocketsHttpHandler()
+                    using HttpClient httpClient = new HttpClient(new DnsDelegatingHandler(dns)
                     {
-                        ConnectTimeout = TimeSpan.FromMilliseconds(_timeout),
+                        InnerHandler = new SocketsHttpHandler()
+                        {
+                            ConnectTimeout = TimeSpan.FromMilliseconds(_timeout),
+                        }
+                    });
+                    httpClient.Timeout = TimeSpan.FromMilliseconds(_timeout);
+                    HttpResponseMessage response = await httpClient.GetAsync(_site);
+                    stopwatch.Stop();
+                    if (response.StatusCode != HttpStatusCode.Forbidden)
+                    {
+                        Logger.Debug($"({index}/{dnsClients.Count}) {uri.Host} successfully connected. {stopwatch.ElapsedMilliseconds}ms");
+                        count++;
                     }
-                });
-                httpClient.Timeout = TimeSpan.FromMilliseconds(_timeout);
-                HttpResponseMessage response = await httpClient.GetAsync(_site);
-                stopwatch.Stop();
-                if (response.StatusCode != HttpStatusCode.Forbidden)
-                {
-                    db.Unskip(uri.Host);
-                    Logger.Debug($"({index}/{dnsClients.Count}) {uri.Host} successfully connected. {stopwatch.ElapsedMilliseconds}ms");
+                    else
+                    {
+                        Logger.Error($"({index}/{dnsClients.Count}) {uri.Host} is banned.");
+                    }
                 }
-                else
+                catch
                 {
-                    db.Skip(uri.Host);
+                    stopwatch.Stop();
                     Logger.Error($"({index}/{dnsClients.Count}) {uri.Host} is banned.");
                 }
             }
-            catch
+            if (count == 2)
             {
-                stopwatch.Stop();
-                db.Skip(uri.Host);
-                Logger.Error($"({index}/{dnsClients.Count}) {uri.Host} is banned.");
+                db.Unskip(ip);
+            }
+            else
+            {
+                db.Skip(ip);
             }
         }
         Console.WriteLine();
@@ -268,38 +298,62 @@ catch (Exception ex)
     Logger.Error(ex.Message);
 }
 
-List<IDnsClient> GetDnsClients(Database db, ClientsProtocol protocol = ClientsProtocol.UDP, bool useSkip = true)
+List<IDnsClient[]> GetDnsClients(Database db, ClientsProtocol protocol = ClientsProtocol.UDP, bool useSkip = true)
 {
-    List<IDnsClient> dnsClients = new List<IDnsClient>();
+    List<IDnsClient[]> dnsClients = new List<IDnsClient[]>();
     foreach (DNS dns in db.list)
     {
+        IDnsClient[] dnsClient = new IDnsClient[2];
         if (useSkip)
         {
             if (!dns.skip)
             {
                 if (protocol == ClientsProtocol.TCP)
-                    dnsClients.Add(new DnsTcpClient(IPAddress.Parse(dns.dns)));
+                {
+                    dnsClient[0] = new DnsTcpClient(IPAddress.Parse(dns.dns1));
+                    dnsClient[1] = new DnsTcpClient(IPAddress.Parse(dns.dns2));
+                }
                 else
-                    dnsClients.Add(new DnsUdpClient(IPAddress.Parse(dns.dns)));
+                {
+                    dnsClient[0] = new DnsUdpClient(IPAddress.Parse(dns.dns1));
+                    dnsClient[1] = new DnsUdpClient(IPAddress.Parse(dns.dns2));
+                }
             }
         }
         else
         {
             if (protocol == ClientsProtocol.TCP)
-                dnsClients.Add(new DnsTcpClient(IPAddress.Parse(dns.dns)));
+            {
+                dnsClient[0] = new DnsTcpClient(IPAddress.Parse(dns.dns1));
+                dnsClient[1] = new DnsTcpClient(IPAddress.Parse(dns.dns2));
+            }
             else
-                dnsClients.Add(new DnsUdpClient(IPAddress.Parse(dns.dns)));
+            {
+                dnsClient[0] = new DnsUdpClient(IPAddress.Parse(dns.dns1));
+                dnsClient[1] = new DnsUdpClient(IPAddress.Parse(dns.dns2));
+            }
         }
+        dnsClients.Add(dnsClient);
     }
     return dnsClients;
 }
 
-IDnsClient GetClientMode(ClientsMode mode, List<IDnsClient> clients)
+IDnsClient GetClientMode(ClientsMode mode, List<IDnsClient[]> clients)
 {
+    List<IDnsClient> dnsClients = new List<IDnsClient>();
+
+    foreach (var client in clients)
+    {
+        foreach (var dns in client)
+        {
+            dnsClients.Add(dns);
+        }
+    }
+
     if(mode == ClientsMode.Racer)
-        return new DnsRacerClient(clients.ToArray());
+        return new DnsRacerClient(dnsClients.ToArray());
     else
-        return new DnsRandomClient(clients.ToArray());
+        return new DnsRandomClient(dnsClients.ToArray());
 }
 
 IDnsServer GetServer(IDnsRawClient rawClient, ClientsProtocol protocol = ClientsProtocol.UDP)

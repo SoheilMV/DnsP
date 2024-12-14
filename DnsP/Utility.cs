@@ -1,12 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using DnsP;
 using System.Diagnostics;
-using System.Linq;
 using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
-using System.Text;
-using System.Threading.Tasks;
 
 internal static class Utility
 {
@@ -115,5 +111,34 @@ internal static class Utility
         }
 
         return false;
+    }
+
+    public static bool RestartParentProcessAsAdmin()
+    {
+        try
+        {
+            Process? parentProcess = ParentProcessUtilities.GetParentProcess();
+            if (parentProcess == null)
+            {
+                throw new Exception("Parent process not found.");
+            }
+            else
+            {
+                var processInfo = new ProcessStartInfo
+                {
+                    FileName = parentProcess.MainModule!.FileName,
+                    UseShellExecute = true,
+                    Verb = "runas"
+                };
+                
+                Process.Start(processInfo);
+                parentProcess.Kill();
+                return true;
+            }
+        }
+        catch
+        {
+            return false;
+        }
     }
 }
