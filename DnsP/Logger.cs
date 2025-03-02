@@ -1,6 +1,4 @@
-﻿using System.Drawing;
-
-internal static class Logger
+﻿internal static class Logger
 {
     public static void Info(string message)
     {

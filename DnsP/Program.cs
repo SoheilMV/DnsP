@@ -7,8 +7,6 @@ using Ae.Dns.Server;
 using Ae.Dns.Client;
 using Ae.Dns.Protocol;
 using Ae.Dns.Client.Filters;
-using System.Collections.Generic;
-using System;
 
 bool _run = false;
 bool _check = false;

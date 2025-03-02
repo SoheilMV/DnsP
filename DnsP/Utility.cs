@@ -1,8 +1,8 @@
-﻿using DnsP;
-using System.Diagnostics;
+﻿using System.Diagnostics;
 using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
+using DnsP;
 
 internal static class Utility
 {
@@ -119,22 +119,24 @@ internal static class Utility
         {
             Process? parentProcess = ParentProcessUtilities.GetParentProcess();
             if (parentProcess == null)
-            {
                 throw new Exception("Parent process not found.");
-            }
-            else
+            else if (parentProcess.MainModule == null)
+                throw new Exception("Main module not found.");
+            else if (string.IsNullOrEmpty(parentProcess.MainModule.FileName))
+                throw new Exception("Main module file not found.");
+
+            string fileName = parentProcess.MainModule.FileName;
+            string command = fileName.Contains("cmd") ? "/k \"dnsp --run\"" : "-c \"dnsp --run\"";
+            var processInfo = new ProcessStartInfo
             {
-                var processInfo = new ProcessStartInfo
-                {
-                    FileName = parentProcess.MainModule!.FileName,
-                    UseShellExecute = true,
-                    Verb = "runas"
-                };
-                
-                Process.Start(processInfo);
-                parentProcess.Kill();
-                return true;
-            }
+                FileName = fileName,
+                Arguments = command,
+                UseShellExecute = true,
+                Verb = "runas"
+            };
+            Process.Start(processInfo);
+            parentProcess.Kill();
+            return true;
         }
         catch
         {
