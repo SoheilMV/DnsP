@@ -6,7 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
 	<ApplicationIcon>../icon.ico</ApplicationIcon>
-    <Version>2.1.0</Version>
+    <Version>2.2.0</Version>
     <Description>DNS Provider</Description>
     <Copyright>Copyright (C) 2024 DnsP</Copyright>
     <PackageProjectUrl>https://github.com/SoheilMV/DnsP</PackageProjectUrl>

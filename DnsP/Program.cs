@@ -22,6 +22,7 @@ if (args.Length == 0)
 try
 {
     Console.Title = _name;
+    Utility.AddPathToUserEnvironment();
     Database db = Database.Initialize();
     var arguments = ArgumentsParser.Parse(args);
     var result = Parser.Default.ParseArguments<ArgumentsOption>(arguments);

@@ -143,4 +143,17 @@ internal static class Utility
             return false;
         }
     }
+
+    public static void AddPathToUserEnvironment()
+    {
+        string exePath = AppDomain.CurrentDomain.BaseDirectory;
+        string variableName = "Path";
+        string? currentPath = Environment.GetEnvironmentVariable(variableName, EnvironmentVariableTarget.User);
+        if (!string.IsNullOrEmpty(currentPath) && !currentPath.Contains(exePath, StringComparison.OrdinalIgnoreCase))
+        {
+            string newPath = currentPath + ";" + exePath;
+            Environment.SetEnvironmentVariable(variableName, newPath, EnvironmentVariableTarget.User);
+            Logger.Info("DnsP has been successfully added to the user's PATH environment variable.");
+        }
+    }
 }
