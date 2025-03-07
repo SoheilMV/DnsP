@@ -2,37 +2,36 @@
 ![DnsP](Images/vscode.png)
 
 # DnsP
-DNS Provider
+DnsP is a specialized DNS proxy server for Windows, similar to DNS Jumper but with enhanced capabilities. It transforms your computer (PC, laptop) or VPS into a custom DNS server, allowing you to leverage a curated list of public DNS providers while serving as a DNS endpoint for other devices.
 
 # :inbox_tray:Installation
-1. Download the program and unzip it . 
-2. Add the program path to the system environment.
-3. Open **CMD**.
-4. Enter **dnsp** to make sure it works.
+* Download the program and unzip the files. 
+* Open CMD and navigate to the program's directory. 
+* Now, run the program with the command `dnsp -e` or `dnsp --environment` to add it to the system environment. 
+* Enjoy using the program.
 
 # :books:Commands
-| Short Name | Long Name  | Description                           |
-|------------|------------|---------------------------------------|
-| -a         | --add      | Add dns to the list.                  |
-| -r         | --remove   | Remove dns from the list.             |
-| -b         | --block    | Add host to blacklist.                |
-| -l         | --unblock  | Remove host from the blacklist.       |
-| -s         | --skip     | Skip dns.                             |
-| -k         | --unskip   | Undo skip dns.                        |
-| -c         | --check    | Find healthy dns.                     |
-| -f         | --flush    | Flushing your previous dns addresses. |
-| -p         | --protocol | Change the dns protocol.              |
-| -m         | --mode     | Change the type of dns list usage.    |
-| -v         | --visit    | Visit the project repository.         |
-|            | --log      | Display the list of dns.              |
-|            | --run      | Run local dns.                        |
-|            | --help     | Display this help screen.             |
-|            | --version  | Display version information.          |
+| Short Name | Long Name     | Description                                 |
+|------------|---------------|---------------------------------------------|
+| -a         | --add         | Add dns to the list.                        |
+| -r         | --remove      | Remove dns from the list.                   |
+| -b         | --block       | Add host to blacklist.                      |
+| -u         | --unblock     | Remove host from the blacklist.             |
+| -c         | --check       | Find healthy dns.                           |
+| -f         | --flush       | Flushing your previous dns addresses.       |
+| -p         | --protocol    | Change the dns protocol.                    |
+| -m         | --mode        | Change the type of dns list usage.          |
+| -v         | --visit       | Visit the project repository.               |
+| -e         | --environment | Checks if dnsp is added to the system path. |
+| -l         | --log         | Display the list of dns.                    |
+|            | --run         | Run local dns.                              |
+|            | --help        | Display this help screen.                   |
+|            | --version     | Display version information.                |
 
 # :computer:Using
-> dnsp **[command]** **[value]**
+> dnsp **[command]** **[options]**
 
-### How to add dns?
+### How can i add a dns?
 > dnsp **[-a | --add] [DNS]**  
 > dnsp **[-a | --add] [DNS] [-n | --name] [Name]**    
 > dnsp **[-a | --add] [File]**
@@ -42,7 +41,7 @@ DNS Provider
 > dnsp -a 1.1.1.1,1.0.0.1 -n cloudflare    
 > dnsp -a C:\example.csv    
 
-### How to remove dns?
+### How can i remove a dns?
 > dnsp **[-r | --remove] [DNS or ID or all]**  
 >
 >
@@ -50,33 +49,19 @@ DNS Provider
 > dnsp -r 1.1.1.1    
 > dnsp -r all    
 
-### How to block the host?
+### How can i block a host to stop dns from accessing it?
 > dnsp **[-b | --block] [Host]**  
 >
 > **Example:**  
 > dnsp -b google.com
 
-### How to unblock the host?
-> dnsp **[-l | --unblock] [Host]**  
+### How can i unblock a host to allow dns to access it?
+> dnsp **[-u | --unblock] [Host]**  
 >
 > **Example:**  
-> dnsp -l google.com
+> dnsp -u google.com
 
-### How to deactivate dns?
-> dnsp **[-s | --skip] [DNS or ID or all]**  
->
-> **Example:**  
-> dnsp -s 1.1.1.1    
-> dnsp -s all    
-
-### How to activate dns?
-> dnsp **[-k | --unskip] [DNS or ID or all]**  
->
-> **Example:**  
-> dnsp -k 1.1.1.1    
-> dnsp -k all    
-
-### How to check dns list?
+### How can i check the dns list?
 > dnsp **[-c | --check] [Link]**  
 > dnsp **[-c | --check] [Link] [-t | --timeout] [Millisecond]**  
 >
@@ -86,20 +71,27 @@ DNS Provider
 
 *Note: By default the timeout is set to 5000ms*
 
-### How to use dns flushing?
+### How can i flush the dns cache?
 > dnsp **[-f | --flush]**    
 
-### How to change the dns protocol?
+### How can i change the dns protocol type?
 > dnsp **[-p | --protocol]**
 
-### How to change the type of dns list usage?
+### How can i change the dns usage mode?
 > dnsp **[-m | --mode]**
 
-### How do I get a report?
-> dnsp --log  
+### How can I check if dnsp is added to the system path?
+> dnsp **[-e | --environment]**  
 
-### How to start local dns?
-> dnsp --run  
+### How can I get the report?
+> dnsp **[-l | --log]**  
+
+### How can I start a local DNS server?
+> dnsp --run **[DNS or ID]**  
+>
+> **Example:**  
+> dnsp --run 1.1.1.1  
+> dnsp --run 0
 
 # :bookmark:Credits
 - [Ae.Dns](https://github.com/alanedwardes/Ae.Dns) (Pure C# implementation of UDP, TCP and HTTPS ("DoH") DNS clients + servers with configurable caching/filtering layers)
