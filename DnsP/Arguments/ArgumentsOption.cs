@@ -14,14 +14,8 @@ internal class ArgumentsOption
     [Option('b', "block", HelpText = "Add host to blacklist")]
     public string? Block { get; set; }
 
-    [Option('l', "unblock", HelpText = "Remove host from the blacklist.")]
+    [Option('u', "unblock", HelpText = "Remove host from the blacklist.")]
     public string? Unblock { get; set; }
-
-    [Option('s', "skip", HelpText = "Skipping the dns address.")]
-    public string? Skip { get; set; }
-
-    [Option('k', "unskip", HelpText = "Undo skipping the dns address.")]
-    public string? Unskip { get; set; }
 
     [Option('c', "check", HelpText = "Find healthy dns.")]
     public string? Check { get; set; }
@@ -41,9 +35,12 @@ internal class ArgumentsOption
     [Option('v', "visit", HelpText = "Visit the project repository.")]
     public bool Visit { get; set; }
 
-    [Option("log", HelpText = "Display the list of dns.")]
+    [Option('e', "environment", HelpText = "Checks if dnsp is added to the system path.")]
+    public bool Environment { get; set; }
+
+    [Option('l', "log", HelpText = "Display the list of dns.")]
     public bool Log { get; set; }
 
     [Option("run", HelpText = "Run local dns.")]
-    public bool Run { get; set; }
+    public string? Run { get; set; }
 }

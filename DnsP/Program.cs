@@ -14,182 +14,175 @@ string _name = "DnsP";
 string _url = "https://github.com/SoheilMV";
 string _site = string.Empty;
 int _timeout = 5000;
+DNS? selectedDns = null;
 CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
-
-if (args.Length == 0)
-    args = new string[] { "--help" };
 
 try
 {
     Console.Title = _name;
-    Utility.AddPathToUserEnvironment();
     Database db = Database.Initialize();
-    var arguments = ArgumentsParser.Parse(args);
-    var result = Parser.Default.ParseArguments<ArgumentsOption>(arguments);
-    result.WithParsed(options =>
+    if (args.Length == 0)
     {
-        if (!string.IsNullOrEmpty(options.Add))
+        Logger.Info("Usage: dnsp [command] [options]");
+        Logger.Info("For help, use:\r\n  dnsp --help  ");
+    }
+    else
+    {
+        var arguments = ArgumentsParser.Parse(args);
+        var result = Parser.Default.ParseArguments<ArgumentsOption>(arguments);
+        result.WithParsed(options =>
         {
-            if (File.Exists(options.Add))
+            if (!string.IsNullOrEmpty(options.Add))
             {
-                DnsModel model = new DnsModel(options.Add);
-                var dnsList = model.GetDnsList();
-                foreach (var dns in dnsList)
+                if (File.Exists(options.Add))
                 {
-                    var ip = dns.DNS.GetAddress();
-                    string name = dns.Name.Length > 1 ? dns.Name : "-";
+                    DnsModel model = new DnsModel(options.Add);
+                    var dnsList = model.GetDnsList();
+                    foreach (var dns in dnsList)
+                    {
+                        var ip = dns.DNS.GetAddress();
+                        string name = dns.Name.Length > 1 ? dns.Name : "-";
+                        IPAddress? iPAddress1 = ip[0];
+                        IPAddress? iPAddress2 = ip[1];
+                        if (iPAddress1 != null && iPAddress2 != null)
+                        {
+                            db.Add(iPAddress1.ToString(), iPAddress2.ToString(), name);
+                        }
+                    }
+                    Logger.Info($"DNS was added to the list.");
+                }
+                else
+                {
+                    IPAddress?[] ip = options.Add.GetAddress();
+                    string name = "-";
+                    if (!string.IsNullOrEmpty(options.Name))
+                        name = options.Name;
+
                     IPAddress? iPAddress1 = ip[0];
                     IPAddress? iPAddress2 = ip[1];
                     if (iPAddress1 != null && iPAddress2 != null)
                     {
-                        db.Add(iPAddress1.ToString(), iPAddress2.ToString(), name);
+                        if (db.Add(iPAddress1.ToString(), iPAddress2.ToString(), name))
+                            Logger.Info($"DNS was added to the list.");
+                        else
+                            Logger.Error("DNS already exists, enter another DNS.");
+                    }
+                    else
+                        Logger.Error("The IP address entered is not valid.");
+                }
+            }
+            else if (!string.IsNullOrEmpty(options.Remove))
+            {
+                if (options.Remove == "all")
+                {
+                    db.Clear();
+                    Logger.Info("DNS list was completely cleared.");
+                }
+                else if (db.Remove(options.Remove))
+                    Logger.Info($"DNS was removed from the list.");
+                else
+                    Logger.Error("DNS is not available in the list, choose DNS from the list.");
+            }
+            else if (!string.IsNullOrEmpty(options.Block))
+            {
+                if (db.Block(options.Block))
+                    Logger.Info($"{options.Block} was added to the blocklist.");
+                else
+                    Logger.Error($"{options.Block} is already blocked, choose another host.");
+            }
+            else if (!string.IsNullOrEmpty(options.Unblock))
+            {
+                if (db.Unblock(options.Unblock))
+                    Logger.Info($"{options.Unblock} was removed from the blocklist.");
+                else
+                    Logger.Error($"{options.Unblock} is not already blocked, select the host from the blocklist.");
+            }
+            else if (!string.IsNullOrEmpty(options.Check))
+            {
+                _check = true;
+                _site = options.Check.Trim();
+                _timeout = options.Timeout;
+            }
+            else if (options.Flush)
+            {
+                Utility.RunCommand("ipconfig", $"/flushdns");
+                Logger.Info("Successfully flushed.");
+            }
+            else if (options.Protocol)
+            {
+                var protocol = db.ChangeProtocol();
+                if (protocol == ClientsProtocol.UDP)
+                    Logger.Info("DNS protocol changed to UDP.");
+                else
+                    Logger.Info("DNS protocol changed to TCP.");
+            }
+            else if (options.Mode)
+            {
+                var mode = db.ChangeMode();
+                if (mode == ClientsMode.Racer)
+                    Logger.Info("DNS mode changed to Racer.");
+                else
+                    Logger.Info("DNS mode changed to Random.");
+            }
+            else if (options.Visit)
+            {
+                string url = $"{_url}/DnsP";
+                using (QRCodeGenerator qrGenerator = new QRCodeGenerator())
+                {
+                    QRCodeData qrCodeData = qrGenerator.CreateQrCode(new PayloadGenerator.Url(url));
+                    using (AsciiQRCode qrCode = new AsciiQRCode(qrCodeData))
+                    {
+                        Utility.OpenUrl(url);
+                        Logger.Custom(qrCode.GetGraphic(1, drawQuietZones: false), ConsoleColor.DarkYellow);
                     }
                 }
-                Logger.Info($"DNS was added to the list.");
             }
-            else
+            else if (options.Environment)
             {
-                IPAddress?[] ip = options.Add.GetAddress();
-                string name = "-";
-                if (!string.IsNullOrEmpty(options.Name))
-                    name = options.Name;
-
-                IPAddress? iPAddress1 = ip[0];
-                IPAddress? iPAddress2 = ip[1];
-                if (iPAddress1 != null && iPAddress2 != null)
+                var isOk = Utility.AddPathToUserEnvironment();
+                if (isOk)
+                    Logger.Info("DnsP has been successfully added to the user's PATH environment variable.");
+                else
+                    Logger.Error("DnsP is already present in the user's PATH environment variable.");
+            }
+            else if (options.Log)
+            {
+                Console.WriteLine();
+                Logger.Info($"DNS Mode: {db.GetMode()}");
+                Logger.Info($"DNS Protocol: {db.GetProtocol()}");
+                Console.WriteLine();
+                var table = new ConsoleTable("ID", "Name", "Primary", "Secondary");
+                foreach (var item in db.list)
                 {
-                    if (db.Add(iPAddress1.ToString(), iPAddress2.ToString(), name))
-                        Logger.Info($"DNS was added to the list.");
-                    else
-                        Logger.Error("DNS already exists, enter another DNS.");
+                    table.AddRow(item.id, item.name, item.primary, item.secondary);
+                }
+                Logger.Info(table.ToMarkDownString());
+            }
+            else if (!string.IsNullOrEmpty(options.Run))
+            {
+                selectedDns = db.Find(options.Run);
+                if (selectedDns != null)
+                {
+                    _run = true;
+                    Logger.Custom(_name.ToLogo(), ConsoleColor.Magenta);
+                    Logger.Custom(_url.ToCenter(), ConsoleColor.Magenta);
+                    ClosingHandler.Create(onClosing, onClosed);
                 }
                 else
-                    Logger.Error("The IP address entered is not valid.");
-            }
-        }
-        else if (!string.IsNullOrEmpty(options.Remove))
-        {
-            if (options.Remove == "all")
-            {
-                db.Clear();
-                Logger.Info("DNS list was completely cleared.");
-            }
-            else if (db.Remove(options.Remove))
-                Logger.Info($"DNS was removed from the list.");
-            else
-                Logger.Error("DNS is not available in the list, choose DNS from the list.");
-        }
-        else if (!string.IsNullOrEmpty(options.Block))
-        {
-            if (db.Block(options.Block))
-                Logger.Info($"{options.Block} was added to the blocklist.");
-            else
-                Logger.Error($"{options.Block} is already blocked, choose another host.");
-        }
-        else if (!string.IsNullOrEmpty(options.Unblock))
-        {
-            if (db.Unblock(options.Unblock))
-                Logger.Info($"{options.Unblock} was removed from the blocklist.");
-            else
-                Logger.Error($"{options.Unblock} is not already blocked, select the host from the blocklist.");
-        }
-        else if (!string.IsNullOrEmpty(options.Skip))
-        {
-            if (options.Skip == "all")
-            {
-                db.Skip();
-                Logger.Info("All dns were skipped.");
-            }
-            else if (db.Skip(options.Skip))
-                Logger.Info($"DNS is skipped.");
-            else
-                Logger.Error("DNS is not available in the list, choose DNS from the list.");
-        }
-        else if (!string.IsNullOrEmpty(options.Unskip))
-        {
-            if (options.Unskip == "all")
-            {
-                db.Unskip();
-                Logger.Info("All dns are enabled.");
-            }
-            else if (db.Unskip(options.Unskip))
-                Logger.Info($"DNS is used.");
-            else
-                Logger.Error("DNS is not available in the list, choose DNS from the list.");
-        }
-        else if (!string.IsNullOrEmpty(options.Check))
-        {
-            _check = true;
-            _site = options.Check.Trim();
-            _timeout = options.Timeout;
-        }
-        else if (options.Flush)
-        {
-            Utility.RunCommand("ipconfig", $"/flushdns");
-            Logger.Info("Successfully flushed.");
-        }
-        else if (options.Protocol)
-        {
-            var protocol = db.ChangeProtocol();
-            if (protocol == ClientsProtocol.UDP)
-                Logger.Info("DNS protocol changed to UDP.");
-            else
-                Logger.Info("DNS protocol changed to TCP.");
-        }
-        else if (options.Mode)
-        {
-            var mode = db.ChangeMode();
-            if (mode == ClientsMode.Racer)
-                Logger.Info("DNS mode changed to Racer.");
-            else
-                Logger.Info("DNS mode changed to Random.");
-        }
-        else if (options.Visit)
-        {
-            string url = $"{_url}/DnsP";
-            using (QRCodeGenerator qrGenerator = new QRCodeGenerator())
-            {
-                QRCodeData qrCodeData = qrGenerator.CreateQrCode(new PayloadGenerator.Url(url));
-                using (AsciiQRCode qrCode = new AsciiQRCode(qrCodeData))
                 {
-                    Utility.OpenUrl(url);
-                    Logger.Custom(qrCode.GetGraphic(1, drawQuietZones: false), ConsoleColor.DarkYellow);
+                    Logger.Error("The provided DNS or ID was not found.\nPlease enter a valid value or use `dnsp --log` to view available options.");
                 }
             }
-        }
-        else if (options.Log)
-        {
-            Console.WriteLine();
-            Logger.Info($"DNS Mode: {db.GetMode()}");
-            Logger.Info($"DNS Protocol: {db.GetProtocol()}");
-            Console.WriteLine();
-            var table = new ConsoleTable("ID", "DNS", "Used", "Name");
-            foreach (var item in db.list)
+            else
             {
-                string used = item.skip == false ? "Yes" : "No";
-                string dns = $"{item.dns1} - {item.dns2}";
-                table.AddRow(item.id, dns, used, item.name);
+                Logger.Error("The command is unknown.");
             }
-            Logger.Info(table.ToMarkDownString());
-        }
-        else if (options.Run)
-        {
-            _run = true;
-
-            Logger.Custom(_name.ToLogo(), ConsoleColor.Magenta);
-            Logger.Custom(_url.ToCenter(), ConsoleColor.Magenta);
-
-            ClosingHandler.Create(onClosing, onClosed);
-            Logger.Warn("Press 'CTRL+C' to exit.");
-        }
-        else
-        {
-            Logger.Error("The command is unknown.");
-        }
-    });
+        });
+    }
 
     if (_run)
     {
+        Logger.Warn("Press 'CTRL+C' to exit.");
         Logger.Warn($"DNS was implemented on the '{IPAddress.Any}'.");
         if (Utility.IsRunAsAdmin())
         {
@@ -200,8 +193,7 @@ try
         }
         else
         {
-            var hasParent = Utility.RestartParentProcessAsAdmin();
-            if (hasParent)
+            if (Utility.RestartParentProcessAsAdmin())
             {
                 Environment.Exit(0);
             }
@@ -214,7 +206,7 @@ try
 
         ClientsMode mode = db.GetMode();
         ClientsProtocol protocol = db.GetProtocol();
-        var clients = GetDnsClients(db, protocol);
+        var clients = GetDnsClients(selectedDns, protocol);
         using IDnsClient clientMode = GetClientMode(mode, clients);
         IDnsFilter dnsFilter = new DnsDelegateFilter((message) =>
         {
@@ -237,23 +229,22 @@ try
     }
     else if (_check)
     {
-        Console.WriteLine();
-        int index = 0;
-        var dnsClients = GetDnsClients(db, db.GetProtocol(), false);
-        foreach (var client in dnsClients)
+        Dictionary<DNS, bool> dnsMap = new Dictionary<DNS, bool>();
+        int index = 1;
+        foreach (var dns in db.list)
         {
-            index++;
             int count = 0;
+            var dnsClients = GetDnsClients(dns, db.GetProtocol());
             string ip = string.Empty;
-            foreach (var dns in client)
+            foreach (var client in dnsClients)
             {
-                var uri = new UriBuilder(dns.ToString()!);
+                var uri = new UriBuilder(client.ToString()!);
                 ip = uri.Host;
                 var stopwatch = new Stopwatch();
                 stopwatch.Start();
                 try
                 {
-                    using HttpClient httpClient = new HttpClient(new DnsDelegatingHandler(dns)
+                    using HttpClient httpClient = new HttpClient(new DnsDelegatingHandler(client)
                     {
                         InnerHandler = new SocketsHttpHandler()
                         {
@@ -265,31 +256,33 @@ try
                     stopwatch.Stop();
                     if (response.StatusCode != HttpStatusCode.Forbidden)
                     {
-                        Logger.Debug($"({index}/{dnsClients.Count}) {uri.Host} successfully connected. {stopwatch.ElapsedMilliseconds}ms");
+                        Logger.Debug($"({index}/{db.list.Count * 2}) {uri.Host} successfully connected. {stopwatch.ElapsedMilliseconds}ms");
                         count++;
                     }
                     else
                     {
-                        Logger.Error($"({index}/{dnsClients.Count}) {uri.Host} is banned.");
+                        Logger.Error($"({index}/{db.list.Count * 2}) {uri.Host} is banned.");
                     }
                 }
                 catch
                 {
                     stopwatch.Stop();
-                    Logger.Error($"({index}/{dnsClients.Count}) {uri.Host} is banned.");
+                    Logger.Error($"({index}/{db.list.Count * 2}) {uri.Host} is banned.");
                 }
+                index++;
             }
-            if (count == 2)
-            {
-                db.Unskip(ip);
-            }
-            else
-            {
-                db.Skip(ip);
-            }
+            dnsMap.Add(dns, count == 2);
         }
         Console.WriteLine();
-        Logger.Warn($"DnsP is ready to use in '{_site}'");
+        var table = new ConsoleTable("ID", "Name", "Primary", "Secondary", "Status");
+        foreach (var item in dnsMap)
+        {
+            if (item.Value)
+                table.AddRow(item.Key.id, item.Key.name, item.Key.primary, item.Key.secondary, "Connected");
+            else
+                table.AddRow(item.Key.id, item.Key.name, item.Key.primary, item.Key.secondary, "Banned");
+        }
+        Logger.Info(table.ToMarkDownString());
     }
 }
 catch (Exception ex)
@@ -297,62 +290,31 @@ catch (Exception ex)
     Logger.Error(ex.Message);
 }
 
-List<IDnsClient[]> GetDnsClients(Database db, ClientsProtocol protocol = ClientsProtocol.UDP, bool useSkip = true)
+IDnsClient[] GetDnsClients(DNS? dns, ClientsProtocol protocol = ClientsProtocol.UDP)
 {
-    List<IDnsClient[]> dnsClients = new List<IDnsClient[]>();
-    foreach (DNS dns in db.list)
+    List<IDnsClient> dnsClients = new List<IDnsClient>();
+    if (dns != null)
     {
-        IDnsClient[] dnsClient = new IDnsClient[2];
-        if (useSkip)
+        if (protocol == ClientsProtocol.TCP)
         {
-            if (!dns.skip)
-            {
-                if (protocol == ClientsProtocol.TCP)
-                {
-                    dnsClient[0] = new DnsTcpClient(IPAddress.Parse(dns.dns1));
-                    dnsClient[1] = new DnsTcpClient(IPAddress.Parse(dns.dns2));
-                }
-                else
-                {
-                    dnsClient[0] = new DnsUdpClient(IPAddress.Parse(dns.dns1));
-                    dnsClient[1] = new DnsUdpClient(IPAddress.Parse(dns.dns2));
-                }
-            }
+            dnsClients.Add(new DnsTcpClient(IPAddress.Parse(dns.primary)));
+            dnsClients.Add(new DnsTcpClient(IPAddress.Parse(dns.secondary)));
         }
         else
         {
-            if (protocol == ClientsProtocol.TCP)
-            {
-                dnsClient[0] = new DnsTcpClient(IPAddress.Parse(dns.dns1));
-                dnsClient[1] = new DnsTcpClient(IPAddress.Parse(dns.dns2));
-            }
-            else
-            {
-                dnsClient[0] = new DnsUdpClient(IPAddress.Parse(dns.dns1));
-                dnsClient[1] = new DnsUdpClient(IPAddress.Parse(dns.dns2));
-            }
+            dnsClients.Add(new DnsUdpClient(IPAddress.Parse(dns.primary)));
+            dnsClients.Add(new DnsUdpClient(IPAddress.Parse(dns.secondary)));
         }
-        dnsClients.Add(dnsClient);
     }
-    return dnsClients;
+    return dnsClients.ToArray();
 }
 
-IDnsClient GetClientMode(ClientsMode mode, List<IDnsClient[]> clients)
+IDnsClient GetClientMode(ClientsMode mode, IDnsClient[] clients)
 {
-    List<IDnsClient> dnsClients = new List<IDnsClient>();
-
-    foreach (var client in clients)
-    {
-        foreach (var dns in client)
-        {
-            dnsClients.Add(dns);
-        }
-    }
-
     if(mode == ClientsMode.Racer)
-        return new DnsRacerClient(dnsClients.ToArray());
+        return new DnsRacerClient(clients);
     else
-        return new DnsRandomClient(dnsClients.ToArray());
+        return new DnsRandomClient(clients);
 }
 
 IDnsServer GetServer(IDnsRawClient rawClient, ClientsProtocol protocol = ClientsProtocol.UDP)

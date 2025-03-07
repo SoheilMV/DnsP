@@ -17,10 +17,10 @@ internal class Database
         blacklist = new List<string>();
     }
 
-    public bool Add(string dns1, string dns2, string name)
+    public bool Add(string primary, string secondary, string name)
     {
         bool result = false;
-        if (!(list.Where(d => d.dns1 == dns1 || d.dns2 == dns2).ToArray().Length > 0))
+        if (!(list.Where(d => d.primary == primary || d.secondary == secondary).ToArray().Length > 0))
         {
             if (list.Count > 0)
             {
@@ -29,9 +29,8 @@ internal class Database
                 {
                     id = d.id + 1,
                     name = name,
-                    skip = false,
-                    dns1 = dns1,
-                    dns2 = dns2
+                    primary = primary,
+                    secondary = secondary
                 });
             }
             else
@@ -40,9 +39,8 @@ internal class Database
                 {
                     id = 0,
                     name = name,
-                    skip = false,
-                    dns1 = dns1,
-                    dns2 = dns2
+                    primary = primary,
+                    secondary = secondary
                 });
             }
             result = true;
@@ -54,7 +52,7 @@ internal class Database
     public bool Remove(string dnsOrId)
     {
         bool result = false;
-        DNS[]? dns = list.Where(d => d.dns1 == dnsOrId || d.dns2 == dnsOrId || d.id.ToString() == dnsOrId).ToArray();
+        DNS[]? dns = list.Where(d => d.primary == dnsOrId || d.secondary == dnsOrId || d.id.ToString() == dnsOrId).ToArray();
         if (dns != null || dns?.Length > 0)
         {
             foreach (var item in dns)
@@ -98,48 +96,9 @@ internal class Database
         return result;
     }
 
-    public bool Skip(string dnsOrId)
+    public DNS? Find(string dnsOrId)
     {
-        bool result = false;
-        var dns = list.Where(d => d.dns1 == dnsOrId || d.dns2 == dnsOrId || d.id.ToString() == dnsOrId);
-        foreach (var item in dns)
-        {
-            item.skip = true;
-            result = true;
-        }
-        Write();
-        return result;
-    }
-
-    public void Skip()
-    {
-        foreach (var dns in list)
-        {
-            dns.skip = true;
-        }
-        Write();
-    }
-
-    public bool Unskip(string dnsOrId)
-    {
-        bool result = false;
-        var dns = list.Where(d => d.dns1 == dnsOrId || d.dns2 == dnsOrId || d.id.ToString() == dnsOrId);
-        foreach (var item in dns)
-        {
-            item.skip = false;
-            result = true;
-        }
-        Write();
-        return result;
-    }
-
-    public void Unskip()
-    {
-        foreach (var dns in list)
-        {
-            dns.skip = false;
-        }
-        Write();
+        return list.Where(d => d.primary == dnsOrId || d.secondary == dnsOrId || d.id.ToString() == dnsOrId).FirstOrDefault();
     }
 
     public ClientsProtocol GetProtocol()
