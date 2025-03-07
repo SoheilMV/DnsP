@@ -14,7 +14,6 @@ string _name = "DnsP";
 string _url = "https://github.com/SoheilMV";
 string _site = string.Empty;
 int _timeout = 5000;
-DNS? selectedDns = null;
 CancellationTokenSource _cancellationTokenSource = new CancellationTokenSource();
 
 try
@@ -160,10 +159,11 @@ try
             }
             else if (!string.IsNullOrEmpty(options.Run))
             {
-                selectedDns = db.Find(options.Run);
-                if (selectedDns != null)
+                var dns = db.Find(options.Run);
+                if (dns != null)
                 {
                     _run = true;
+                    db.Select(dns);
                     Logger.Custom(_name.ToLogo(), ConsoleColor.Magenta);
                     Logger.Custom(_url.ToCenter(), ConsoleColor.Magenta);
                     ClosingHandler.Create(onClosing, onClosed);
@@ -193,7 +193,7 @@ try
         }
         else
         {
-            if (Utility.RestartParentProcessAsAdmin())
+            if (Utility.RestartParentProcessAsAdmin(db.selectedDns))
             {
                 Environment.Exit(0);
             }
@@ -206,7 +206,7 @@ try
 
         ClientsMode mode = db.GetMode();
         ClientsProtocol protocol = db.GetProtocol();
-        var clients = GetDnsClients(selectedDns, protocol);
+        var clients = GetDnsClients(db.selectedDns, protocol);
         using IDnsClient clientMode = GetClientMode(mode, clients);
         IDnsFilter dnsFilter = new DnsDelegateFilter((message) =>
         {

@@ -4,15 +4,17 @@ internal class Database
 {
     private static string _path = Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
 
-    public string Protocol { get; set; }
-    public string Mode { get; set; }
+    public string protocol { get; set; }
+    public string mode { get; set; }
+    public DNS? selectedDns { get; set; }
     public List<DNS> list { get; set; }
     public List<string> blacklist { get; set; }
 
     public Database()
     {
-        Protocol = "UDP";
-        Mode = "Racer";
+        protocol = "UDP";
+        mode = "Racer";
+        selectedDns = null;
         list = new List<DNS>();
         blacklist = new List<string>();
     }
@@ -101,34 +103,43 @@ internal class Database
         return list.Where(d => d.primary == dnsOrId || d.secondary == dnsOrId || d.id.ToString() == dnsOrId).FirstOrDefault();
     }
 
+    public void Select(DNS dns)
+    {
+        if (dns != null)
+        {
+            selectedDns = dns;
+            Write();
+        }
+    }
+
     public ClientsProtocol GetProtocol()
     {
-        return Protocol == "UDP" ? ClientsProtocol.UDP : ClientsProtocol.TCP;
+        return protocol == "UDP" ? ClientsProtocol.UDP : ClientsProtocol.TCP;
     }
 
     public ClientsProtocol ChangeProtocol()
     {
-        if (Protocol == "UDP")
-            Protocol = "TCP";
+        if (protocol == "UDP")
+            protocol = "TCP";
         else
-            Protocol = "UDP";
+            protocol = "UDP";
         Write();
-        return Protocol == "UDP" ? ClientsProtocol.UDP : ClientsProtocol.TCP;
+        return protocol == "UDP" ? ClientsProtocol.UDP : ClientsProtocol.TCP;
     }
 
     public ClientsMode GetMode()
     {
-        return Mode == "Racer" ? ClientsMode.Racer : ClientsMode.Random;
+        return mode == "Racer" ? ClientsMode.Racer : ClientsMode.Random;
     }
 
     public ClientsMode ChangeMode()
     {
-        if (Mode == "Racer")
-            Mode = "Random";
+        if (mode == "Racer")
+            mode = "Random";
         else
-            Mode = "Racer";
+            mode = "Racer";
         Write();
-        return Mode == "Racer" ? ClientsMode.Racer : ClientsMode.Random;
+        return mode == "Racer" ? ClientsMode.Racer : ClientsMode.Random;
     }
 
     public bool HostIsBlock(string host)

@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using System.Net;
 using System.Net.NetworkInformation;
 using System.Runtime.InteropServices;
 using System.Security.Principal;
@@ -113,30 +114,34 @@ internal static class Utility
         return false;
     }
 
-    public static bool RestartParentProcessAsAdmin()
+    public static bool RestartParentProcessAsAdmin(DNS? dns)
     {
         try
         {
-            Process? parentProcess = ParentProcessUtilities.GetParentProcess();
-            if (parentProcess == null)
-                throw new Exception("Parent process not found.");
-            else if (parentProcess.MainModule == null)
-                throw new Exception("Main module not found.");
-            else if (string.IsNullOrEmpty(parentProcess.MainModule.FileName))
-                throw new Exception("Main module file not found.");
-
-            string fileName = parentProcess.MainModule.FileName;
-            string command = fileName.Contains("cmd") ? "/k \"dnsp --run\"" : "-c \"dnsp --run\"";
-            var processInfo = new ProcessStartInfo
+            if (dns != null)
             {
-                FileName = fileName,
-                Arguments = command,
-                UseShellExecute = true,
-                Verb = "runas"
-            };
-            Process.Start(processInfo);
-            parentProcess.Kill();
-            return true;
+                Process? parentProcess = ParentProcessUtilities.GetParentProcess();
+                if (parentProcess == null)
+                    throw new Exception("Parent process not found.");
+                else if (parentProcess.MainModule == null)
+                    throw new Exception("Main module not found.");
+                else if (string.IsNullOrEmpty(parentProcess.MainModule.FileName))
+                    throw new Exception("Main module file not found.");
+
+                string fileName = parentProcess.MainModule.FileName;
+                string command = fileName.Contains("cmd") ? $"/k \"dnsp --run {dns.id}\"" : $"-c \"dnsp --run {dns.id}\"";
+                var processInfo = new ProcessStartInfo
+                {
+                    FileName = fileName,
+                    Arguments = command,
+                    UseShellExecute = true,
+                    Verb = "runas"
+                };
+                Process.Start(processInfo);
+                parentProcess.Kill();
+                return true;
+            }
+            return false;
         }
         catch
         {
